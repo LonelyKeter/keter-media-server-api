@@ -3,6 +3,7 @@ mod authors;
 
 mod auth;
 
+extern crate keter_media_auth;
 #[macro_use] pub extern crate rocket;
 
 mod req_prelude {
