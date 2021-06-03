@@ -8,6 +8,10 @@ mod auth;
 mod req_prelude {
     pub use rocket::{
             self,
+            http::
+            {
+                RawStr
+            },
             serde:: {
                 json::Json
             } 
