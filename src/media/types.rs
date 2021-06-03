@@ -44,5 +44,10 @@ pub enum MaterialQuality {
 
 #[derive(Serialize, Deserialize)]
 pub struct RegisterMedia {
-  
+
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Usage {
+
 }
