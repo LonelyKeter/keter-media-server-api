@@ -509,10 +509,28 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "keter-media-server-api"
 version = "0.1.0"
 dependencies = [
  "jsonwebtoken",
+=======
+name = "keter-media-auth"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "jsonwebtoken",
+ "lazy_static",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "keter-media-server-api"
+version = "0.1.0"
+dependencies = [
+ "keter-media-auth",
+>>>>>>> c79423a6ad9ae4250aa16f77c7df572d2f29cc1d
  "rocket",
  "serde",
  "serde_json",
