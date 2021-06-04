@@ -34,7 +34,7 @@ pub async fn get_base(
   rating: Option<u32>,
   ord: Option<Ordering>) 
     -> Json<Vec<MediaInfo>> {
-  Json(vec![Media::new(12345)])
+  Json(Vec::new())
 }
 
 #[get("/<id>", format = "json")]
@@ -48,7 +48,10 @@ pub async fn post_media(reg_media: Json<u8>) {
 }
 
 #[post("/media/materials?<media>&<author>", format = "json", data = "<reg_media>")]
-pub async fn post_material_named(media: String, author: AuthorParam, reg_media: Json<MaterialInfo>) {
+pub async fn post_material_named(
+  media: String, 
+  author: AuthorParam, 
+  reg_media: Json<MaterialInfo>) {
   unimplemented!();
 }
 
