@@ -679,6 +679,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "postgres_query",
+ "serde",
 ]
 
 [[package]]
@@ -688,6 +689,7 @@ dependencies = [
  "jsonwebtoken",
  "keter-media-auth",
  "keter-media-db",
+ "keter-media-model",
  "rocket",
  "serde",
  "serde_json",

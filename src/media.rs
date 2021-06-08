@@ -1,40 +1,62 @@
-use crate::req_prelude::*;
-use super::types::*;
+use rocket::fairing::AdHoc;
+use rocket::form::{self, FromFormField, ValueField};
+use rocket::serde::{json::Json};
 
-enum AuthorParam {
-  Id(u64),
-  Alias(String)
+use keter_media_model::{
+  media::*,
+  usage::*,
+  userinfo::*
+};
+
+pub fn stage() -> AdHoc {
+  AdHoc::on_ignite("MEDIA", |rocket| async {
+    rocket.mount("/media", routes![
+      get_base,
+      
+    ])
+  })
 }
 
-use rocket::form::{self, FromFormField, ValueField};
+
+pub enum AuthorParam {
+  Id(std::num::NonZeroU64),
+  Alias(String)
+}
 
 #[rocket::async_trait]
 impl<'r> FromFormField<'r> for AuthorParam {
   fn from_value(field: ValueField<'r>) -> form::Result<'r, Self> {
-    todo!("Impl FromFormField for AuthorParam");
-    unimplemented!();
+    if let Ok(id) = str::parse::<UserKey>(field.value) {
+      Ok(AuthorParam::Id(id))
+    } else {
+      Ok(AuthorParam::Alias(field.value.to_owned()))
+    }
   }
 }
 
-#[rocket::async_trait]
-impl<'r> FromFormField<'r> for MediaKind {
-  fn from_value(field: ValueField<'r>) -> form::Result<'r, Self> {
-    todo!("Impl FromFormField for MediaKind");
-    unimplemented!();
+#[derive(FromFormField)]
+pub enum MediaKindParam {
+  Audio,
+  Video,
+  Image
+}
+
+impl From<MediaKindParam> for MediaKind {
+  fn from(other: MediaKindParam) -> MediaKind {
+    match other {
+        MediaKindParam::Audio => MediaKind::Audio,
+        MediaKindParam::Video => MediaKind::Video,
+        MediaKindParam::Image => MediaKind::Image,
+    }
   }
 }
 
 type JsonOut<T> = rocket::serde::json::Json<T>;
 
-#[get("/?<title>&<kind>&<author>&<rating>&<ord>", format = "json")]
-pub async fn get_base(
-  title: Option<String>,
-  kind: Option<MediaKind>,
-  author: Option<String>,
-  rating: Option<u32>,
-  ord: Option<Ordering>) 
+#[get("/?<title>&<kind>&<author>&<rating>", format = "json")]
+pub async fn get_base(title: Option<String>, kind: Option<MediaKindParam>, author: Option<AuthorParam>, rating: Option<f64>) 
     -> Json<Vec<MediaInfo>> {
-  Json(vec![Media::new(12345)])
+      unimplemented!()
 }
 
 #[get("/<id>", format = "json")]

@@ -1,9 +1,11 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 mod media;
 mod authors;
 
 mod auth;
 
-extern crate keter_media_auth;
 #[macro_use] pub extern crate rocket;
 
 mod req_prelude {
@@ -31,6 +33,15 @@ mod type_prelude {
 #[launch]
 fn rocket() -> _ {
     rocket::build()
+        .manage(create_authorizator())
         .attach(media::stage())
         .attach(authors::stage())
+}
+
+fn create_authorizator() -> keter_media_db::auth::Authorizator {
+    unimplemented!()
+}
+
+fn get_media_db() -> keter_media_db::db::ModelDB {
+    unimplemented!()
 }
