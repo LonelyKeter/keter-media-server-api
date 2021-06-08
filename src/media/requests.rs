@@ -42,57 +42,57 @@ pub async fn get_concrete(id: u128) -> Json<Media> {
   unimplemented!();
 }
 
-#[post("/media", format = "json", data = "<reg_media>")]
+#[post("/", format = "json", data = "<reg_media>")]
 pub async fn post_media(reg_media: Json<u8>) {
   unimplemented!();
 }
 
-#[post("/media/materials?<media>&<author>", format = "json", data = "<reg_media>")]
+#[post("/materials?<media>&<author>", format = "json", data = "<reg_media>")]
 pub async fn post_material_named(media: String, author: AuthorParam, reg_media: Json<MaterialInfo>) {
   unimplemented!();
 }
 
-#[post("/media/materials?<media>", format = "json", data = "<reg_media>")]
+#[post("/materials?<media>", format = "json", data = "<reg_media>")]
 pub async fn post_material(media: u64, reg_media: Json<MaterialInfo>) {
   unimplemented!();
 }
 
-#[delete("/media/materials?<media>")]
+#[delete("/materials?<media>")]
 pub async fn delete_material(media: u64) {
   unimplemented!();
 }
 
-#[put("/media/usage?<material>", format = "json", data = "<license>")]
+#[put("/usage?<material>", format = "json", data = "<license>")]
 pub async fn put_usage_material(material: u64, license: Json<License>) {
   unimplemented!();
 }
 
-#[put("/media/usage?<media>&<author>", format = "json", data = "<license>")]
+#[put("/usage?<media>&<author>", format = "json", data = "<license>")]
 pub async fn put_usage_media_named(media: String, author: AuthorParam, license: Json<License>) {
   unimplemented!();
 }
 
-#[put("/media/usage?<media>", format = "json", data = "<license>")]
+#[put("/usage?<media>", format = "json", data = "<license>")]
 pub async fn put_usage_media(media: u64, license: Json<License>) {
   unimplemented!();
 }
 
-#[get("/media/usage", format = "json")]
+#[get("/usage", format = "json")]
 pub async fn get_usage() -> Json<Vec<Usage>> {
   unimplemented!();
 }
 
-#[get("/media/usage?<media>", format = "json")]
+#[get("/usage?<media>", format = "json")]
 pub async fn get_usage_media(media: u64) -> Json<Vec<Usage>> {
   unimplemented!();
 }
 
-#[get("/media/usage?<media>&<author>", format = "json")]
+#[get("/usage?<media>&<author>", format = "json")]
 pub async fn get_usage_media_named(media: String, author: AuthorParam) -> Json<Vec<Usage>> {
   unimplemented!();
 }
 
-#[get("/media/usage?<material>", format = "json")]
+#[get("/usage?<material>", format = "json")]
 pub async fn get_usage_material(material: u64) -> Json<Vec<Usage>> {
   unimplemented!();
 }
