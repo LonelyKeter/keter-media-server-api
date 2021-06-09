@@ -1,10 +1,16 @@
 mod unauthenticated;
 mod user;
-mod user_id;
+mod authentication;
+mod author;
+mod moderator;
+mod admin;
 
 pub use unauthenticated::*;
 pub use user::*;
-pub use user_id::*;
+pub use author::*;
+pub use authentication::*;
+pub use moderator::*;
+pub use admin::*;
 
 use keter_media_db::auth::{Privelegies, roles};
 use keter_media_db::auth as db_auth;

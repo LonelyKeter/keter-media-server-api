@@ -29,19 +29,59 @@ mod type_prelude {
     };
 }
 
-
-#[launch]
-fn rocket() -> _ {
-    rocket::build()
-        .manage(create_authorizator())
-        .attach(media::stage())
-        .attach(authors::stage())
+struct Init {
+    authorizator: Authorizator
 }
 
-fn create_authorizator() -> keter_media_db::auth::Authorizator {
+impl Init {
+    async fn init() -> Result<Self, ()> {
+        use rocket::tokio::spawn;
+        let authorizator = spawn(create_authorizator())
+            .await
+            .map_err(|_| ())?
+            .map_err(|_| ())?;
+
+        Ok(Self {
+            authorizator
+        })
+    }
+}
+
+#[rocket::main]
+async fn main() {
+    let init = Init::init().await.unwrap();
+    
+
+    rocket::build()
+        .manage(init.authorizator)
+        .attach(media::stage())
+        .attach(authors::stage())
+        .launch()
+        .await;
+}
+
+use auth::Authentication;
+use keter_media_db::auth::Authorizator;
+async fn create_authorizator() -> Result<Authorizator, ClientError> {
+    use keter_media_db::auth::ModelDBClients;
+    let auth_client = create_auth_db().auth().await?;
+    let media_db = create_media_db();
+    
+    let authorizator = Authorizator::new(
+        auth_client, 
+        ModelDBClients::from_model_db(&media_db).await?);
+
+    Ok(authorizator)
+}
+
+use keter_media_db::client::ClientError;
+use keter_media_db::db::auth::AuthDB;
+fn create_auth_db() -> AuthDB {
     unimplemented!()
 }
 
-fn get_media_db() -> keter_media_db::db::ModelDB {
+
+
+fn create_media_db() -> keter_media_db::db::ModelDB {
     unimplemented!()
 }

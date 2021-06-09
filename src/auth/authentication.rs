@@ -32,7 +32,8 @@ impl<'r> FromRequest<'r> for &'r Authentication {
       return Outcome::Failure((Status::Unauthorized, AccessError::NoAuthToken))
     }
 
-    let token = &header["Bearer ".len()..];
+    //TODO: normal token retrieval from header
+    let token = header.trim_start_matches("Bearer ");
 
     let token_source = match request.rocket().state::<TokenSoure>() {
       Some(src) => src,

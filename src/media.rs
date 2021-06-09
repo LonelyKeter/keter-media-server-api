@@ -8,6 +8,8 @@ use keter_media_model::{
   userinfo::*
 };
 
+use crate::auth::*;
+
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("MEDIA", |rocket| async {
     rocket.mount("/media", routes![
@@ -60,61 +62,93 @@ pub async fn get_base(title: Option<String>, kind: Option<MediaKindParam>, autho
 }
 
 #[get("/<id>", format = "json")]
-pub async fn get_concrete(id: u128) -> Json<Media> {
+pub async fn get_concrete(id: MediaKey) -> Json<Media> {
   unimplemented!();
 }
 
 #[post("/", format = "json", data = "<reg_media>")]
-pub async fn post_media(reg_media: Json<u8>) {
-  unimplemented!();
-}
-
-#[post("/materials?<media>&<author>", format = "json", data = "<reg_media>")]
-pub async fn post_material_named(media: String, author: AuthorParam, reg_media: Json<MaterialInfo>) {
+pub async fn post_media(
+  reg_media: Json<u8>, 
+  auth: &Authentication, author: Author) {
   unimplemented!();
 }
 
 #[post("/materials?<media>", format = "json", data = "<reg_media>")]
-pub async fn post_material(media: u64, reg_media: Json<MaterialInfo>) {
+pub async fn post_material_named(
+  media: String, reg_media: Json<MaterialInfo>,
+  auth: &Authentication, author: Author) {
   unimplemented!();
 }
 
-#[delete("/materials?<media>")]
-pub async fn delete_material(media: u64) {
+#[post("/materials?<media>", format = "json", data = "<reg_media>")]
+pub async fn post_material(
+  media: MediaKey, reg_media: Json<MaterialInfo>,
+  auth: &Authentication, author: Author) {
+  unimplemented!();
+}
+
+//TODO: multiple routes for admin and author
+#[delete("/materials?<id>")]
+pub async fn delete_material_admin(
+  id: MaterialKey,
+  auth: &Authentication, admin: Admin) {
+  unimplemented!();
+}
+
+#[delete("/materials?<id>")]
+pub async fn delete_material_author(
+  id: MaterialKey,
+  auth: &Authentication, author: Author) {
   unimplemented!();
 }
 
 #[put("/usage?<material>", format = "json", data = "<license>")]
-pub async fn put_usage_material(material: u64, license: Json<License>) {
-  unimplemented!();
-}
-
-#[put("/usage?<media>&<author>", format = "json", data = "<license>")]
-pub async fn put_usage_media_named(media: String, author: AuthorParam, license: Json<License>) {
+pub async fn put_usage_material(
+  material: MaterialKey, license: Json<License>,
+  auth: &Authentication, author: Author) {
   unimplemented!();
 }
 
 #[put("/usage?<media>", format = "json", data = "<license>")]
-pub async fn put_usage_media(media: u64, license: Json<License>) {
+pub async fn put_usage_media_named(
+  media: String, license: Json<License>,
+  auth: &Authentication, author: Author) {
   unimplemented!();
 }
 
+#[put("/usage?<media>", format = "json", data = "<license>")]
+pub async fn put_usage_media(
+  media: MediaKey, license: Json<License>,
+  auth: &Authentication, author: Author) {
+  unimplemented!();
+}
+
+//TODO: Separate usage for admin and author
 #[get("/usage", format = "json")]
-pub async fn get_usage() -> Json<Vec<Usage>> {
+pub async fn get_usage(auth: &Authentication, author: Author) -> Json<Vec<Usage>> {
   unimplemented!();
 }
 
+//TODO: Separate usage for admin and author
 #[get("/usage?<media>", format = "json")]
-pub async fn get_usage_media(media: u64) -> Json<Vec<Usage>> {
+pub async fn get_usage_media(
+  media: MediaKey,
+  auth: &Authentication, author: Author) -> Json<Vec<Usage>> {
   unimplemented!();
 }
 
-#[get("/usage?<media>&<author>", format = "json")]
-pub async fn get_usage_media_named(media: String, author: AuthorParam) -> Json<Vec<Usage>> {
+//TODO: Separate usage for admin and author
+#[get("/usage?<media>", format = "json")]
+pub async fn get_usage_media_named(
+  media: String,
+  auth: &Authentication, author: Author) -> Json<Vec<Usage>> {
   unimplemented!();
 }
 
+//TODO: Separate usage for admin and author
 #[get("/usage?<material>", format = "json")]
-pub async fn get_usage_material(material: u64) -> Json<Vec<Usage>> {
+pub async fn get_usage_material(
+  material: MaterialKey,
+  auth: &Authentication, author: Author) -> Json<Vec<Usage>> {
   unimplemented!();
 }

@@ -8,6 +8,10 @@ impl Author {
   fn new(privelegies: Privelegies<roles::Author>) -> Self {
       Self { privelegies }
   }
+
+  pub fn privelegies(&self) -> Privelegies<roles::Author> {
+    self.privelegies
+  }
 }
 
 #[rocket::async_trait]
