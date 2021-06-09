@@ -53,10 +53,9 @@ impl From<MediaKindParam> for MediaKind {
   }
 }
 
-type JsonOut<T> = rocket::serde::json::Json<T>;
 
 #[get("/?<title>&<kind>&<author>&<rating>", format = "json")]
-pub async fn get_base(title: Option<String>, kind: Option<MediaKindParam>, author: Option<AuthorParam>, rating: Option<f64>) 
+pub async fn get_base(title: Option<String>, kind: Option<MediaKindParam>, author: Option<AuthorParam>, rating: Option<MediaRating>) 
     -> Json<Vec<MediaInfo>> {
       unimplemented!()
 }

@@ -5,12 +5,16 @@ mod author;
 mod moderator;
 mod admin;
 
+mod requests;
+
 pub use unauthenticated::*;
 pub use user::*;
 pub use author::*;
 pub use authentication::*;
 pub use moderator::*;
 pub use admin::*;
+
+pub use requests::stage;
 
 use keter_media_db::auth::{Privelegies, roles};
 use keter_media_db::auth as db_auth;

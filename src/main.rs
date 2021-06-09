@@ -6,6 +6,8 @@ mod authors;
 
 mod auth;
 
+mod utility;
+
 #[macro_use] pub extern crate rocket;
 
 mod req_prelude {
