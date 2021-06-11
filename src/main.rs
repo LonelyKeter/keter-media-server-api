@@ -23,12 +23,8 @@ mod req_prelude {
         };
 }
 
-mod type_prelude {
-    pub use rocket::{
-        serde:: {
-            Serialize, Deserialize
-        } 
-    };
+pub mod state {
+    pub use keter_media_db::auth::Authenticator;
 }
 
 struct Init {

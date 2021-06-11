@@ -1,9 +1,11 @@
+use keter_media_db::auth::AuthenticationInfo;
 use rocket::{
     State,
     fairing::AdHoc,
     form::{self, FromFormField, ValueField},
     serde::{json::Json},
     response::{status},
+    request::{Request}
 };
 
 use keter_media_model::{
@@ -12,7 +14,8 @@ use keter_media_model::{
 
 use crate::{
     auth::*,
-    utility::*
+    utility::*,
+    state,
 };
 
 pub fn stage() -> AdHoc {
@@ -46,14 +49,18 @@ pub async fn get_privelegies(auth: &Authentication, user: User)
         user.privelegies().get_privelegies().await,
         ())
 }
-
-#[post("/login", format = "json", data="<login_data>")]
-pub async fn login(login_data: LoginData, token_source: &State<authentication::TokenSoure>) 
+#[post("/login", format = "json", data="<auth_info>")]
+pub async fn login(auth_info: Json<AuthenticationInfo>, 
+    token_source: &State<authentication::TokenSoure>, authenticator: &State<state::Authenticator>) 
     -> Result<status::Accepted<()>, status::BadRequest<()>> {
-    todo!("Login logic")
+    if let Ok(user_id) = authenticator.authenticate(auth_info.0).await {
+        if let Ok(token) = token_source.create_token(user_id) {
+            
+        }
+    }
 }
 
-pub async fn register(register_data: RegisterData, auth: &State<Authenticator>) 
+pub async fn register(register_data: RegisterData, auth: &State<state::Authenticator>) 
     -> Result<status::Accepted<UserInfo>, status::BadRequest<()>> {
     todo!("Register logic")
 }  

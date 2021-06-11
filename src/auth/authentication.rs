@@ -1,8 +1,8 @@
 use keter_media_model::userinfo::UserKey;
-use keter_media_db::auth::UserId;
+use keter_media_db::auth::{UserId, AuthenticationInfo};
 use keter_media_auth::*;
 
-pub type TokenSoure = TokenSource<UserKey>;
+pub type TokenSoure = TokenSource<UserKey>; 
 
 use super::*;
 
