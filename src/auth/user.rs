@@ -9,8 +9,8 @@ impl User {
       Self { privelegies }
   }
 
-  pub fn privelegies(&self) -> Privelegies<roles::User> {
-    self.privelegies
+  pub fn privelegies(&self) -> &Privelegies<roles::User> {
+    &self.privelegies
   }
 }
 
@@ -26,7 +26,7 @@ impl<'r> FromRequest<'r> for User {
           None => return Outcome::Forward(())
       };
       
-      match auhtorizator.user_privelegies(authentication.user_id()).await {
+      match auhtorizator.user_privelegies(authentication.user_key()).await {
           Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }

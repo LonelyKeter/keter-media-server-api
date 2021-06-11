@@ -1,4 +1,5 @@
-use keter_media_db::auth::AuthenticationInfo;
+use keter_media_db::auth::{Authenticator, AuthenticationError};
+use keter_media_model::userinfo::{self, RegisterData};
 use rocket::{
     State,
     fairing::AdHoc,
@@ -18,20 +19,15 @@ use crate::{
     state,
 };
 
+use super::responders::BearerAuth;
+
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("AUTH", |rocket| async {
     rocket.mount("/auth", routes![
-        get_base,
         get_self,
         get_privelegies
     ])
   })
-}
-
-#[get("/", format = "json")]
-pub async fn get_base(auth: &Authentication) 
-    -> Result<status::Accepted<()>, status::Unauthorized<()>> {
-    
 }
 
 #[get("/self", format = "json")]
@@ -49,18 +45,37 @@ pub async fn get_privelegies(auth: &Authentication, user: User)
         user.privelegies().get_privelegies().await,
         ())
 }
-#[post("/login", format = "json", data="<auth_info>")]
-pub async fn login(auth_info: Json<AuthenticationInfo>, 
-    token_source: &State<authentication::TokenSoure>, authenticator: &State<state::Authenticator>) 
-    -> Result<status::Accepted<()>, status::BadRequest<()>> {
-    if let Ok(user_id) = authenticator.authenticate(auth_info.0).await {
-        if let Ok(token) = token_source.create_token(user_id) {
-            
-        }
+
+struct LoginData(userinfo::LoginData);
+
+#[rocket::async_trait]
+impl keter_media_auth::LoginDataAsync for LoginData {
+    type Claim = UserKey;
+    type Context = Authenticator;
+    type Err = AuthenticationError;
+
+    async fn to_claim(self, context: &Self::Context) -> Result<Self::Claim, Self::Err> {
+        let user_id = context.authenticate(self.0).await?;
+        Ok(user_id)
     }
 }
 
-pub async fn register(register_data: RegisterData, auth: &State<state::Authenticator>) 
-    -> Result<status::Accepted<UserInfo>, status::BadRequest<()>> {
-    todo!("Register logic")
+#[post("/login", format = "json", data="<login_data>")]
+pub async fn login(login_data: Json<userinfo::LoginData>, 
+    token_source: &State<authentication::TokenSoure>, authenticator: &State<state::Authenticator>) 
+    -> Result<status::Accepted<BearerAuth<()>>, status::BadRequest<()>> {
+    if let Ok(token) = token_source.create_token_async(LoginData(login_data.0), authenticator).await {
+        Ok(status::Accepted(Some(BearerAuth::new(token, ()))))
+    } else {
+        Err(status::BadRequest(Some(())))
+    }
+}
+
+#[post("/register", format = "json", data="<register_data>")]
+pub async fn register(register_data: Json<RegisterData>, auth: &State<state::Authenticator>) 
+    -> Result<status::Accepted<()>, status::BadRequest<()>> {
+    match auth.register(register_data.0).await {
+        Ok(_) => Ok(status::Accepted(Some(()))),
+        Err(_) => Err(status::BadRequest(Some(())))
+    }
 }  

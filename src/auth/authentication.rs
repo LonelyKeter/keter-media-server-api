@@ -1,5 +1,4 @@
-use keter_media_model::userinfo::UserKey;
-use keter_media_db::auth::{UserId, AuthenticationInfo};
+use keter_media_model::userinfo::{UserKey};
 use keter_media_auth::*;
 
 pub type TokenSoure = TokenSource<UserKey>; 
@@ -7,15 +6,15 @@ pub type TokenSoure = TokenSource<UserKey>;
 use super::*;
 
 pub struct Authentication {
-  user_id: UserId
+  user_key: UserKey
 }
 
 impl Authentication {
   fn new(user_key: UserKey) -> Self {
-      Self { user_id: UserId::new(user_key) }
+      Self { user_key: user_key }
   }
 
-  pub fn user_id(&self) -> UserId { self.user_id }
+  pub fn user_key(&self) -> UserKey { self.user_key }
 }
 
 #[rocket::async_trait]

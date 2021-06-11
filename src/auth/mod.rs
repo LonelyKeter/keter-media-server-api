@@ -6,6 +6,7 @@ mod moderator;
 mod admin;
 
 mod requests;
+mod responders;
 
 pub use unauthenticated::*;
 pub use user::*;

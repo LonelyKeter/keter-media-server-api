@@ -22,7 +22,7 @@ impl<'r> FromRequest<'r> for Admin {
           None => return Outcome::Forward(())
       };
       
-      match auhtorizator.admin_privelegies(authentication.user_id()).await {
+      match auhtorizator.admin_privelegies(authentication.user_key()).await {
           Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }

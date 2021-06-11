@@ -22,7 +22,7 @@ impl<'r> FromRequest<'r> for Moderator {
           None => return Outcome::Forward(())
       };
       
-      match auhtorizator.moderator_privelegies(authentication.user_id()).await {
+      match auhtorizator.moderator_privelegies(authentication.user_key()).await {
           Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }
