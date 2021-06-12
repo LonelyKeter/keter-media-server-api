@@ -24,8 +24,8 @@ use super::responders::BearerAuth;
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("AUTH", |rocket| async {
     rocket.mount("/auth", routes![
-        get_self,
-        get_privelegies
+        login,
+        register
     ])
   })
 }

@@ -12,16 +12,14 @@ use crate::auth::*;
 
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("MEDIA", |rocket| async {
-    rocket.mount("/media", routes![
-      get_base,
-      
+    rocket.mount("/media", routes![      
     ])
   })
 }
 
 
 pub enum AuthorParam {
-  Id(std::num::NonZeroU64),
+  Id(UserKey),
   Alias(String)
 }
 

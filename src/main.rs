@@ -28,7 +28,9 @@ pub mod state {
 }
 
 struct Init {
-    authorizator: Authorizator
+    authorizator: Authorizator,
+    authenticator: Authenticator,
+    token_source: auth::TokenSoure
 }
 
 impl Init {
@@ -39,8 +41,16 @@ impl Init {
             .map_err(|_| ())?
             .map_err(|_| ())?;
 
+        let authenticator = create_authenticator()
+            .await
+            .map_err(|_| ())?;
+
+        let token_source = crate::auth::TokenSoure::from_secret(b"Very very secret secret");
+
         Ok(Self {
-            authorizator
+            authorizator,
+            authenticator,
+            token_source
         })
     }
 }
@@ -52,34 +62,47 @@ async fn main() {
 
     rocket::build()
         .manage(init.authorizator)
+        .manage(init.authenticator)
+        .manage(init.token_source)
         .attach(media::stage())
         .attach(authors::stage())
+        .attach(auth::stage())
         .launch()
-        .await;
+        .await
+        .unwrap();
 }
 
 use auth::Authentication;
+use keter_media_db::auth::Authenticator;
 use keter_media_db::auth::Authorizator;
 async fn create_authorizator() -> Result<Authorizator, ClientError> {
     use keter_media_db::auth::ModelDBClients;
     let auth_client = create_auth_db().auth().await?;
-    let media_db = create_media_db();
+    let model_db = create_model_db();
     
     let authorizator = Authorizator::new(
         auth_client, 
-        ModelDBClients::from_model_db(&media_db).await?);
+        ModelDBClients::from_model_db(&model_db).await?);
 
     Ok(authorizator)
 }
 
+async fn create_authenticator() -> Result<Authenticator, ClientError> {
+    let auth_client = create_auth_db().auth().await?;
+    let authenticator = Authenticator::new(auth_client);
+
+    Ok(authenticator)
+}
+
 use keter_media_db::client::ClientError;
+use keter_media_db::db::ModelDB;
 use keter_media_db::db::auth::AuthDB;
 fn create_auth_db() -> AuthDB {
-    unimplemented!()
+    AuthDB::default()
 }
 
 
 
-fn create_media_db() -> keter_media_db::db::ModelDB {
-    unimplemented!()
+fn create_model_db() -> keter_media_db::db::ModelDB {
+    ModelDB::default()
 }
