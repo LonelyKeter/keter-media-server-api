@@ -1,21 +1,21 @@
 use super::*;
 
-pub struct User {
-  privelegies: Privelegies<roles::User>
+pub struct Registered {
+  privelegies: Privelegies<roles::Registered>
 }
 
-impl User {
-  fn new(privelegies: Privelegies<roles::User>) -> Self {
+impl Registered {
+  fn new(privelegies: Privelegies<roles::Registered>) -> Self {
       Self { privelegies }
   }
 
-  pub fn privelegies(&self) -> &Privelegies<roles::User> {
+  pub fn privelegies(&self) -> &Privelegies<roles::Registered> {
     &self.privelegies
   }
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for User {
+impl<'r> FromRequest<'r> for Registered {
   type Error = AccessError;
 
   async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {

@@ -31,7 +31,7 @@ pub fn stage() -> AdHoc {
 }
 
 #[get("/self", format = "json")]
-pub async fn get_self(auth: &Authentication, user: User) 
+pub async fn get_self(auth: &Authentication, user: Registered) 
     -> ResultNotFound<Json<UserInfo>, ()> {
     ok_json_or_not_found(
         user.privelegies().get_info().await, 
@@ -39,7 +39,7 @@ pub async fn get_self(auth: &Authentication, user: User)
 }
 
 #[get("/privelegies", format = "json")]
-pub async fn get_privelegies(auth: &Authentication, user: User) 
+pub async fn get_privelegies(auth: &Authentication, user: Registered) 
     -> ResultNotFound<Json<UserPrivelegies>, ()> {
     ok_json_or_not_found(
         user.privelegies().get_privelegies().await,

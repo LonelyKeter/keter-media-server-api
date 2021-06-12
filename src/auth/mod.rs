@@ -1,5 +1,5 @@
 mod unauthenticated;
-mod user;
+mod registered;
 mod authentication;
 mod author;
 mod moderator;
@@ -9,7 +9,7 @@ mod requests;
 mod responders;
 
 pub use unauthenticated::*;
-pub use user::*;
+pub use registered::*;
 pub use author::*;
 pub use authentication::*;
 pub use moderator::*;
