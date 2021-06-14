@@ -8,7 +8,10 @@ use keter_media_model::{
   userinfo::*
 };
 
-use crate::auth::*;
+use crate::{
+  auth::*,
+  utility::*
+};
 
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("MEDIA", |rocket| async {
@@ -61,6 +64,15 @@ pub async fn get_base(title: Option<String>, kind: Option<MediaKindParam>, autho
 #[get("/<id>", format = "json")]
 pub async fn get_concrete(id: MediaKey) -> Json<Media> {
   unimplemented!();
+}
+
+#[get("/{id}/reviews", format = "json")]
+pub async fn get_reviews(id: MediaKey, user: Unauthenticated) 
+  -> ResultNotFound<Json<Vec<UserReview>>> {
+}
+
+pub async fn post_review(id: MediaKey, user: Registered) {
+
 }
 
 #[post("/", format = "json", data = "<reg_media>")]

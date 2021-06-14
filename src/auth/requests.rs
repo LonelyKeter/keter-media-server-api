@@ -40,7 +40,7 @@ pub async fn get_self(auth: &Authentication, user: Registered)
 
 #[get("/privelegies", format = "json")]
 pub async fn get_privelegies(auth: &Authentication, user: Registered) 
-    -> ResultNotFound<Json<UserPrivelegies>, ()> {
+    -> ResultNotFound<Json<UserPriveleges>, ()> {
     ok_json_or_not_found(
         user.privelegies().get_privelegies().await,
         ())

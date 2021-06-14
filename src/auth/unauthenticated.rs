@@ -8,6 +8,10 @@ impl Unauthenticated {
   fn new(privelegies: Privelegies<roles::Unauthenticated>) -> Self {
       Self { privelegies }
   }
+
+  pub fn privelegies(&self) -> &Privelegies<Unauthenticated> {
+    &self.privelegies
+  }
 }
 
 #[rocket::async_trait]
