@@ -9,7 +9,7 @@ impl Unauthenticated {
       Self { privelegies }
   }
 
-  pub fn privelegies(&self) -> &Privelegies<Unauthenticated> {
+  pub fn privelegies(&self) -> &Privelegies<roles::Unauthenticated> {
     &self.privelegies
   }
 }

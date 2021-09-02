@@ -15,7 +15,7 @@ use crate::{
 
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("MEDIA", |rocket| async {
-    rocket.mount("/media", routes![      
+    rocket.mount("/api/media", routes![      
     ])
   })
 }
@@ -66,9 +66,10 @@ pub async fn get_concrete(id: MediaKey) -> Json<Media> {
   unimplemented!();
 }
 
-#[get("/{id}/reviews", format = "json")]
+#[get("/<id>/reviews", format = "json")]
 pub async fn get_reviews(id: MediaKey, user: Unauthenticated) 
-  -> ResultNotFound<Json<Vec<UserReview>>> {
+  -> ResultNotFound<Json<Vec<UserReview>>, ()> {
+    Err(status::NotFound(()))
 }
 
 pub async fn post_review(id: MediaKey, user: Registered) {

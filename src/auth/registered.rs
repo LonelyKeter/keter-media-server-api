@@ -23,7 +23,7 @@ impl<'r> FromRequest<'r> for Registered {
 
       let auhtorizator = match get_authorizator(request) {
           Some(val) => val,
-          None => return Outcome::Forward(())
+          None => return Outcome::Failure((Status::InternalServerError, AccessError::NoPermitions))
       };
       
       match auhtorizator.user_privelegies(authentication.user_key()).await {

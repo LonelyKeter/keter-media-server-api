@@ -1,7 +1,7 @@
 use rocket::fairing::AdHoc;
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("", |rocket| async {
-    rocket.mount("/authors", routes![
+    rocket.mount("/api/authors", routes![
       authors
     ])
   })

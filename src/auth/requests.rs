@@ -19,31 +19,35 @@ use crate::{
     state,
 };
 
-use super::responders::BearerAuth;
+use super::responders::*;
 
 pub fn stage() -> AdHoc {
   AdHoc::on_ignite("AUTH", |rocket| async {
-    rocket.mount("/auth", routes![
+    rocket.mount("/api/auth", routes![
         login,
-        register
+        register,
+        get_self,
+        get_privelegies
     ])
   })
 }
 
 #[get("/self", format = "json")]
 pub async fn get_self(auth: &Authentication, user: Registered) 
-    -> ResultNotFound<Json<UserInfo>, ()> {
+    -> ResultNotFound<Json<UserInfo>, String> {
     ok_json_or_not_found(
         user.privelegies().get_info().await, 
-        ())
+        |e| format!("{:?}", e))
 }
+
+
 
 #[get("/privelegies", format = "json")]
 pub async fn get_privelegies(auth: &Authentication, user: Registered) 
     -> ResultNotFound<Json<UserPriveleges>, ()> {
     ok_json_or_not_found(
         user.privelegies().get_privelegies().await,
-        ())
+        |_| ())
 }
 
 struct LoginData(userinfo::LoginData);
@@ -63,11 +67,13 @@ impl keter_media_auth::LoginDataAsync for LoginData {
 #[post("/login", format = "json", data="<login_data>")]
 pub async fn login(login_data: Json<userinfo::LoginData>, 
     token_source: &State<authentication::TokenSoure>, authenticator: &State<state::Authenticator>) 
-    -> Result<status::Accepted<BearerAuth<()>>, status::BadRequest<()>> {
-    if let Ok(token) = token_source.create_token_async(LoginData(login_data.0), authenticator).await {
-        Ok(status::Accepted(Some(BearerAuth::new(token, ()))))
-    } else {
-        Err(status::BadRequest(Some(())))
+    -> Result<status::Accepted<String>, status::BadRequest<()>> {
+    match token_source.create_token_async(LoginData(login_data.0), authenticator).await {
+        Ok(token) => Ok(status::Accepted(Some(token))),
+        Err(err) => {
+            //eprintln!("{:?}", err);
+            Err(status::BadRequest(None))
+        }
     }
 }
 

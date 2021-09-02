@@ -26,6 +26,8 @@ use rocket::{
     http::Status
 };
 
+static JWT_COOCKIE_NAME: &str = "JWTauth";
+
 fn get_authorizator<'r>(request: &'r Request<'_>) -> Option<&'r db_auth::Authorizator> {
     request.rocket().state::<db_auth::Authorizator>()
 }
@@ -34,5 +36,6 @@ fn get_authorizator<'r>(request: &'r Request<'_>) -> Option<&'r db_auth::Authori
 pub enum AccessError {
     NoPermitions,
     NoAuthToken,
-    InvalidAuthToken
+    InvalidAuthToken,
+    InvalidAuthScheme
 }
