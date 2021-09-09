@@ -1,53 +1,36 @@
-use keter_media_db::auth::{Authenticator, AuthenticationError};
+use keter_media_db::auth::{AuthenticationError, Authenticator};
 use keter_media_model::userinfo::{self, RegisterData};
-use rocket::{
-    State,
-    fairing::AdHoc,
-    form::{self, FromFormField, ValueField},
-    serde::{json::Json},
-    response::{status},
-    request::{Request}
-};
+use rocket::{fairing::AdHoc, response::status, serde::json::Json, State};
 
-use keter_media_model::{
-  userinfo::*
-};
+use keter_media_model::userinfo::*;
 
-use crate::{
-    auth::*,
-    utility::*,
-    state,
-};
-
-use super::responders::*;
+use crate::{auth::*, state, utility::*};
 
 pub fn stage() -> AdHoc {
-  AdHoc::on_ignite("AUTH", |rocket| async {
-    rocket.mount("/api/auth", routes![
-        login,
-        register,
-        get_self,
-        get_privelegies
-    ])
-  })
+    AdHoc::on_ignite("AUTH", |rocket| async {
+        rocket.mount(
+            "/api/auth",
+            routes![login, register, get_self, get_privelegies],
+        )
+    })
 }
 
-#[get("/self", format = "json")]
-pub async fn get_self(auth: &Authentication, user: Registered) 
-    -> ResultNotFound<Json<UserInfo>, String> {
+#[get("/self")]
+pub async fn get_self(
+    auth: &Authentication,
+    user: Registered,
+) -> ResultNotFound<Json<UserInfo>, Option<String>> {
     ok_json_or_not_found(
-        user.privelegies().get_info().await, 
-        |e| format!("{:?}", e))
+      user.privelegies().get_info().await, 
+      not_found_error_string)
 }
 
-
-
-#[get("/privelegies", format = "json")]
-pub async fn get_privelegies(auth: &Authentication, user: Registered) 
-    -> ResultNotFound<Json<UserPriveleges>, ()> {
-    ok_json_or_not_found(
-        user.privelegies().get_privelegies().await,
-        |_| ())
+#[get("/privelegies")]
+pub async fn get_privelegies(
+    auth: &Authentication,
+    user: Registered,
+) -> ResultNotFound<Json<UserPriveleges>, ()> {
+    ok_json_or_not_found(user.privelegies().get_privelegies().await, |_| ())
 }
 
 struct LoginData(userinfo::LoginData);
@@ -64,11 +47,16 @@ impl keter_media_auth::LoginDataAsync for LoginData {
     }
 }
 
-#[post("/login", format = "json", data="<login_data>")]
-pub async fn login(login_data: Json<userinfo::LoginData>, 
-    token_source: &State<authentication::TokenSoure>, authenticator: &State<state::Authenticator>) 
-    -> Result<status::Accepted<String>, status::BadRequest<()>> {
-    match token_source.create_token_async(LoginData(login_data.0), authenticator).await {
+#[post("/login", format = "json", data = "<login_data>")]
+pub async fn login(
+    login_data: Json<userinfo::LoginData>,
+    token_source: &State<authentication::TokenSoure>,
+    authenticator: &State<state::Authenticator>,
+) -> Result<status::Accepted<String>, status::BadRequest<()>> {
+    match token_source
+        .create_token_async(LoginData(login_data.0), authenticator)
+        .await
+    {
         Ok(token) => Ok(status::Accepted(Some(token))),
         Err(err) => {
             //eprintln!("{:?}", err);
@@ -77,11 +65,13 @@ pub async fn login(login_data: Json<userinfo::LoginData>,
     }
 }
 
-#[post("/register", format = "json", data="<register_data>")]
-pub async fn register(register_data: Json<RegisterData>, auth: &State<state::Authenticator>) 
-    -> Result<status::Accepted<()>, status::BadRequest<()>> {
+#[post("/register", format = "json", data = "<register_data>")]
+pub async fn register(
+    register_data: Json<RegisterData>,
+    auth: &State<state::Authenticator>,
+) -> Result<status::Accepted<()>, status::BadRequest<()>> {
     match auth.register(register_data.0).await {
         Ok(_) => Ok(status::Accepted(Some(()))),
-        Err(_) => Err(status::BadRequest(Some(())))
+        Err(_) => Err(status::BadRequest(Some(()))),
     }
-}  
+}
