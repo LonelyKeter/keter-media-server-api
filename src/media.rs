@@ -8,9 +8,7 @@ use crate::{auth::*, utility::*};
 
 pub fn stage() -> AdHoc {
     AdHoc::on_ignite("MEDIA", |rocket| async {
-        rocket.mount("/api/media", routes![
-          get
-        ])
+        rocket.mount("/api/media", routes![get, get_media_id, get_materials])
     })
 }
 
@@ -49,9 +47,10 @@ impl From<MediaKindParam> for MediaKind {
 
 #[get("/")]
 pub async fn get(user: Unauthenticated) -> ResultNotFound<Json<Vec<MediaInfo>>, Option<String>> {
-  ok_json_vec_or_not_found(
-    user.privelegies().get_media_many().await, 
-    not_found_error_string)
+    ok_json_vec_or_not_found(
+        user.privelegies().get_media_many().await,
+        not_found_error_string,
+    )
 }
 
 #[get("/?<title>&<kind>&<author>&<rating>", format = "json")]
@@ -64,12 +63,16 @@ pub async fn get_base(
     unimplemented!()
 }
 
-/*
 #[get("/<id>", format = "json")]
-pub async fn get_byt_id(id: MediaKey) -> Json<Media> {
-    unimplemented!();
+pub async fn get_media_id(
+    id: MediaKey,
+    user: Unauthenticated,
+) -> ResultNotFound<Json<MediaInfo>, Option<String>> {
+    ok_json_or_not_found(
+        user.privelegies().get_media_id(id).await,
+        not_found_error_string,
+    )
 }
-*/
 
 #[get("/<id>/reviews", format = "json")]
 pub async fn get_reviews(
@@ -84,6 +87,17 @@ pub async fn post_review(id: MediaKey, user: Registered) {}
 #[post("/", format = "json", data = "<reg_media>")]
 pub async fn post_media(reg_media: Json<u8>, auth: &Authentication, author: Author) {
     unimplemented!();
+}
+
+#[get("/<media_id>/materials", format = "json")]
+pub async fn get_materials(
+    media_id: MediaKey,
+    user: Unauthenticated,
+) -> ResultNotFound<Json<Vec<MaterialInfo>>, Option<String>> {
+    ok_json_vec_or_not_found(
+        user.privelegies().get_materials(media_id).await,
+        not_found_error_string,
+    )
 }
 
 #[post("/materials?<media>", format = "json", data = "<reg_media>")]
