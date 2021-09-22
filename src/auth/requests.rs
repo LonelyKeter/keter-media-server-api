@@ -19,18 +19,16 @@ pub fn stage() -> AdHoc {
 pub async fn get_self(
     auth: &Authentication,
     user: Registered,
-) -> ResultNotFound<Json<UserInfo>, Option<String>> {
-    ok_json_or_not_found(
-      user.privelegies().get_info().await, 
-      not_found_error_string)
+) -> JsonApiResponce<UserInfo, ()> {
+    JsonApiResponce::get_opt(user.privelegies().get_info().await)
 }
 
 #[get("/privelegies")]
 pub async fn get_privelegies(
     auth: &Authentication,
     user: Registered,
-) -> ResultNotFound<Json<UserPriveleges>, ()> {
-    ok_json_or_not_found(user.privelegies().get_privelegies().await, |_| ())
+) -> JsonApiResponce<UserPriveleges, ()> {
+    JsonApiResponce::get_opt(user.privelegies().get_privelegies().await)
 }
 
 struct LoginData(userinfo::LoginData);

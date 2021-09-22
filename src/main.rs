@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-mod authors;
 mod media;
+mod usage;
+mod users;
 
 mod auth;
 
@@ -54,7 +55,8 @@ fn build_app(init: Init) -> Rocket<Build> {
         .manage(init.authenticator)
         .manage(init.token_source)
         .attach(media::stage())
-        .attach(authors::stage())
+        .attach(users::stage())
+        .attach(usage::stage())
         .attach(auth::stage())
 }
 

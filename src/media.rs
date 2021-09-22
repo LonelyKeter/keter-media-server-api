@@ -1,5 +1,7 @@
+use keter_media_db::db::model::MediaSearchKey;
 use rocket::fairing::AdHoc;
 use rocket::form::{self, FromFormField, ValueField};
+use rocket::response::status::{Accepted, NotFound};
 use rocket::serde::json::Json;
 
 use keter_media_model::{media::*, usage::*, userinfo::*};
@@ -8,7 +10,19 @@ use crate::{auth::*, utility::*};
 
 pub fn stage() -> AdHoc {
     AdHoc::on_ignite("MEDIA", |rocket| async {
-        rocket.mount("/api/media", routes![get, get_media_id, get_materials])
+        rocket.mount(
+            "/api/media",
+            routes![
+                get,
+                get_media_id,
+                get_media_author_id,
+                get_materials,
+                get_material_id,
+                get_material_id_used,
+                get_reviews,
+                put_review
+            ],
+        )
     })
 }
 
@@ -46,11 +60,8 @@ impl From<MediaKindParam> for MediaKind {
 }
 
 #[get("/")]
-pub async fn get(user: Unauthenticated) -> ResultNotFound<Json<Vec<MediaInfo>>, Option<String>> {
-    ok_json_vec_or_not_found(
-        user.privelegies().get_media_many().await,
-        not_found_error_string,
-    )
+pub async fn get(user: Unauthenticated) -> JsonApiResponce<Vec<MediaInfo>, ()> {
+    JsonApiResponce::get_many(user.privelegies().get_media_many().await)
 }
 
 #[get("/?<title>&<kind>&<author>&<rating>", format = "json")]
@@ -64,25 +75,38 @@ pub async fn get_base(
 }
 
 #[get("/<id>", format = "json")]
-pub async fn get_media_id(
-    id: MediaKey,
+pub async fn get_media_id(id: MediaKey, user: Unauthenticated) -> JsonApiResponce<MediaInfo, ()> {
+    JsonApiResponce::get_opt(user.privelegies().get_media_id(id).await)
+}
+
+#[get("/?<author_id>", format = "json")]
+pub async fn get_media_author_id(
+    author_id: UserKey,
     user: Unauthenticated,
-) -> ResultNotFound<Json<MediaInfo>, Option<String>> {
-    ok_json_or_not_found(
-        user.privelegies().get_media_id(id).await,
-        not_found_error_string,
-    )
+) -> JsonApiResponce<Vec<MediaInfo>, ()> {
+    JsonApiResponce::get_many(user.privelegies().get_media_author_id(author_id).await)
 }
 
 #[get("/<id>/reviews", format = "json")]
 pub async fn get_reviews(
     id: MediaKey,
     user: Unauthenticated,
-) -> ResultNotFound<Json<Vec<UserReview>>, ()> {
-    Err(status::NotFound(()))
+) -> JsonApiResponce<Vec<UserReview>, ()> {
+    JsonApiResponce::get_many(user.privelegies().get_reviews(MediaSearchKey::Id(id)).await)
 }
 
-pub async fn post_review(id: MediaKey, user: Registered) {}
+#[put("/<id>/reviews", format = "json", data = "<review>")]
+pub async fn put_review(
+    id: MediaKey,
+    review: Json<Review>,
+    user: Registered,
+) -> JsonApiResponce<(), ()> {
+    JsonApiResponce::get(
+        user.privelegies()
+            .post_review(&MediaSearchKey::Id(id), &review.0)
+            .await,
+    )
+}
 
 #[post("/", format = "json", data = "<reg_media>")]
 pub async fn post_media(reg_media: Json<u8>, auth: &Authentication, author: Author) {
@@ -93,21 +117,25 @@ pub async fn post_media(reg_media: Json<u8>, auth: &Authentication, author: Auth
 pub async fn get_materials(
     media_id: MediaKey,
     user: Unauthenticated,
-) -> ResultNotFound<Json<Vec<MaterialInfo>>, Option<String>> {
-    ok_json_vec_or_not_found(
-        user.privelegies().get_materials(media_id).await,
-        not_found_error_string,
-    )
+) -> JsonApiResponce<Vec<MaterialInfo>, ()> {
+    JsonApiResponce::get_many(user.privelegies().get_materials(media_id).await)
 }
 
-#[post("/materials?<media>", format = "json", data = "<reg_media>")]
-pub async fn post_material_named(
-    media: String,
-    reg_media: Json<MaterialInfo>,
+#[get("/materials/<id>", format = "json", rank = 1)]
+pub async fn get_material_id(
+    id: MaterialKey,
+    user: Unauthenticated,
+) -> JsonApiResponce<MaterialInfo, ()> {
+    JsonApiResponce::get_opt(user.privelegies().get_material_id(id).await)
+}
+
+#[get("/materials/<id>?used", format = "json", rank = 2)]
+pub async fn get_material_id_used(
+    id: MaterialKey,
     auth: &Authentication,
-    author: Author,
-) {
-    unimplemented!();
+    user: Registered,
+) -> JsonApiResponce<bool, ()> {
+    JsonApiResponce::get(user.privelegies().is_material_used(id).await)
 }
 
 #[post("/materials?<media>", format = "json", data = "<reg_media>")]
@@ -161,6 +189,8 @@ pub async fn put_usage_media(
     unimplemented!();
 }
 
+/*
+
 //TODO: Separate usage for admin and author
 #[get("/usage", format = "json")]
 pub async fn get_usage(auth: &Authentication, author: Author) -> Json<Vec<Usage>> {
@@ -196,3 +226,5 @@ pub async fn get_usage_material(
 ) -> Json<Vec<Usage>> {
     unimplemented!();
 }
+
+*/
