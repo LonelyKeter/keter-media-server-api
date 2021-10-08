@@ -10,25 +10,9 @@ pub fn stage() -> AdHoc {
     AdHoc::on_ignite("AUTH", |rocket| async {
         rocket.mount(
             "/api/auth",
-            routes![login, register, get_self, get_privelegies],
+            routes![login, register],
         )
     })
-}
-
-#[get("/self")]
-pub async fn get_self(
-    auth: &Authentication,
-    user: Registered,
-) -> JsonApiResponce<UserInfo, ()> {
-    JsonApiResponce::get_opt(user.privelegies().get_info().await)
-}
-
-#[get("/privelegies")]
-pub async fn get_privelegies(
-    auth: &Authentication,
-    user: Registered,
-) -> JsonApiResponce<UserPriveleges, ()> {
-    JsonApiResponce::get_opt(user.privelegies().get_privelegies().await)
 }
 
 struct LoginData(userinfo::LoginData);
@@ -50,15 +34,15 @@ pub async fn login(
     login_data: Json<userinfo::LoginData>,
     token_source: &State<authentication::TokenSoure>,
     authenticator: &State<state::Authenticator>,
-) -> Result<status::Accepted<String>, status::BadRequest<()>> {
+) -> JsonResponce<String, String> {
     match token_source
         .create_token_async(LoginData(login_data.0), authenticator)
         .await
     {
-        Ok(token) => Ok(status::Accepted(Some(token))),
-        Err(err) => {
+        Ok(token) => success(JsonSuccess::Accepted(token)),
+        Err(_) => {
             //eprintln!("{:?}", err);
-            Err(status::BadRequest(None))
+            err(JsonError::BadRequest(String::from("Invalid token")))
         }
     }
 }

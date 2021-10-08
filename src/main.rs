@@ -2,12 +2,14 @@
 #![allow(unused_variables)]
 
 mod media;
-mod usage;
+mod licenses;
 mod users;
 
 mod auth;
 
 mod utility;
+
+mod store;
 
 #[macro_use]
 pub extern crate rocket;
@@ -24,21 +26,31 @@ struct Init {
     authorizator: Authorizator,
     authenticator: Authenticator,
     token_source: auth::TokenSoure,
+    material_store: store::MaterialStore
 }
 
 impl Init {
-    async fn init() -> Result<Self, ClientError> {
+    async fn init() -> Result<Self, InitError> {
         let authorizator = create_authorizator();
         let authenticator = create_authenticator();
 
         let token_source = crate::auth::TokenSoure::from_secret(b"Very very secret secret");
+        let material_store = store::MaterialStore::init(".\\store");
 
         Ok(Self {
-            authorizator: authorizator.await?,
-            authenticator: authenticator.await?,
+            authorizator: authorizator.await.map_err(InitError::Client)?,
+            authenticator: authenticator.await.map_err(InitError::Client)?,
+            material_store: material_store.await.map_err(InitError::MaterialStore)?,
             token_source,
         })
     }
+}
+
+
+#[derive(Debug)]
+enum InitError {
+    Client(ClientError),
+    MaterialStore(store::Error)
 }
 
 #[rocket::main]
@@ -53,10 +65,11 @@ fn build_app(init: Init) -> Rocket<Build> {
     rocket::build()
         .manage(init.authorizator)
         .manage(init.authenticator)
+        .manage(init.material_store)
         .manage(init.token_source)
         .attach(media::stage())
         .attach(users::stage())
-        .attach(usage::stage())
+        .attach(licenses::stage())
         .attach(auth::stage())
 }
 

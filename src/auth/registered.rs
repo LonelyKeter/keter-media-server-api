@@ -26,7 +26,7 @@ impl<'r> FromRequest<'r> for Registered {
           None => return Outcome::Failure((Status::InternalServerError, AccessError::NoPermitions))
       };
       
-      match auhtorizator.user_privelegies(authentication.user_key()).await {
+      match auhtorizator.registered_privelegies(authentication.user_key()).await {
           Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }
