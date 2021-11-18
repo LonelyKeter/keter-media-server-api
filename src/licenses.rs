@@ -19,13 +19,13 @@ pub fn stage() -> AdHoc {
 
 #[get("/")]
 pub async fn get_many(user: Unauthenticated) -> JsonResponce<Vec<License>, ()> {
-    JsonResponce::db_get_many(user.privelegies().get_licenses_many().await)
+    JsonResponce::db_get_many(user.priveleges().get_licenses_many().await)
 }
 
 #[get("/<id>", format = "json", rank = 2)]
 pub async fn get_with_id(id: LicenseKey, user: Unauthenticated) -> JsonResponce<License, ()> {
     JsonResponce::db_get_opt(
-        user.privelegies()
+        user.priveleges()
             .get_license(LicenseSearchKey::Id(id))
             .await,
     )
@@ -34,7 +34,7 @@ pub async fn get_with_id(id: LicenseKey, user: Unauthenticated) -> JsonResponce<
 #[get("/<title>", format = "json", rank = 3)]
 pub async fn get_with_title(title: String, user: Unauthenticated) -> JsonResponce<License, ()> {
     JsonResponce::db_get_opt(
-        user.privelegies()
+        user.priveleges()
             .get_license(LicenseSearchKey::Title(title))
             .await,
     )

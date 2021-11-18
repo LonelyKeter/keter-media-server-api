@@ -1,16 +1,16 @@
 use super::*;
 
 pub struct Registered {
-  privelegies: Privelegies<roles::Registered>
+  priveleges: Priveleges<roles::Registered>
 }
 
 impl Registered {
-  fn new(privelegies: Privelegies<roles::Registered>) -> Self {
-      Self { privelegies }
+  fn new(priveleges: Priveleges<roles::Registered>) -> Self {
+      Self { priveleges }
   }
 
-  pub fn privelegies(&self) -> &Privelegies<roles::Registered> {
-    &self.privelegies
+  pub fn priveleges(&self) -> &Priveleges<roles::Registered> {
+    &self.priveleges
   }
 }
 
@@ -26,8 +26,8 @@ impl<'r> FromRequest<'r> for Registered {
           None => return Outcome::Failure((Status::InternalServerError, AccessError::NoPermitions))
       };
       
-      match auhtorizator.registered_privelegies(authentication.user_key()).await {
-          Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
+      match auhtorizator.registered_priveleges(authentication.user_key()).await {
+          Ok(priveleges) => Outcome::Success(Self::new(priveleges)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }
   }  

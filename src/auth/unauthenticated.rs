@@ -1,16 +1,16 @@
 use super::*;
 
 pub struct Unauthenticated {
-  privelegies: Privelegies<roles::Unauthenticated>
+  priveleges: Priveleges<roles::Unauthenticated>
 }
 
 impl Unauthenticated {
-  fn new(privelegies: Privelegies<roles::Unauthenticated>) -> Self {
-      Self { privelegies }
+  fn new(priveleges: Priveleges<roles::Unauthenticated>) -> Self {
+      Self { priveleges }
   }
 
-  pub fn privelegies(&self) -> &Privelegies<roles::Unauthenticated> {
-    &self.privelegies
+  pub fn priveleges(&self) -> &Priveleges<roles::Unauthenticated> {
+    &self.priveleges
   }
 }
 
@@ -24,8 +24,8 @@ impl<'r> FromRequest<'r> for Unauthenticated {
           None => return Outcome::Forward(())
       };
       
-      match authorizator.unauthenticated_privelegies().await {
-          Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
+      match authorizator.unauthenticated_priveleges().await {
+          Ok(priveleges) => Outcome::Success(Self::new(priveleges)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }
   }  

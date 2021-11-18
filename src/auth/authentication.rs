@@ -1,7 +1,27 @@
-use keter_media_model::userinfo::{UserKey};
-use keter_media_auth::*;
+use std::ops::Deref;
 
-pub type TokenSoure = TokenSource<UserKey>; 
+use keter_media_model::{media::MaterialKey, userinfo::{UserKey}};
+pub use keter_media_auth::TokenSource;
+
+pub struct AuthTokenSource(pub TokenSource<UserKey>); 
+impl Deref for AuthTokenSource {
+    type Target = TokenSource<UserKey>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+pub struct DownloadTokenSource(pub TokenSource<MaterialKey>);
+impl Deref for DownloadTokenSource {
+    type Target = TokenSource<UserKey>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub type AuthToken = String;
+pub type MaterialDownloadToken = String;
 
 use super::*;
 
@@ -24,17 +44,17 @@ impl<'r> FromRequest<'r> for &'r Authentication {
   async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
     let token = match get_token_from_auth_header(request) {
       Ok(val) => val,
-      Err(err) => return Outcome::Failure((Status::BadRequest, err))
+      Err(err) => return Outcome::Forward(()) 
     };
 
-    let token_source = match request.rocket().state::<TokenSoure>() {
+    let token_source = match request.rocket().state::<AuthTokenSource>() {
       Some(src) => src,
-      None => return Outcome::Failure((Status::ServiceUnavailable, AccessError::InvalidAuthToken))
+      None => return Outcome::Forward(()) 
     };
 
-    let user_key = match token_source.verify_token_str(token) {
+    let user_key = match token_source.verify_token(token) {
       Ok(val) => val,
-      Err(_) => return Outcome::Failure((Status::Unauthorized, AccessError::InvalidAuthToken))
+      Err(_) => return Outcome::Forward(()) 
     };
 
     let authentication = request.local_cache(|| Authentication::new(user_key));

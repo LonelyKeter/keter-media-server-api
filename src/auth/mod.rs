@@ -17,7 +17,7 @@ pub use admin::*;
 
 pub use requests::stage;
 
-use keter_media_db::auth::{Privelegies, roles};
+use keter_media_db::auth::{Priveleges, roles};
 use keter_media_db::auth as db_auth;
 
 use rocket::{

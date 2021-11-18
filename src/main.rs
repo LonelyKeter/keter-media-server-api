@@ -25,23 +25,31 @@ pub mod state {
 struct Init {
     authorizator: Authorizator,
     authenticator: Authenticator,
-    token_source: auth::TokenSoure,
+    token_source: auth::AuthTokenSource, 
+    store_token_source: auth::DownloadTokenSource,
     material_store: store::MaterialStore
 }
 
 impl Init {
     async fn init() -> Result<Self, InitError> {
+        use crate::auth::{TokenSource, AuthTokenSource, DownloadTokenSource};
+        use keter_media_model::media::MediaKey;
+        use keter_media_model::userinfo::UserKey;
+
         let authorizator = create_authorizator();
         let authenticator = create_authenticator();
 
-        let token_source = crate::auth::TokenSoure::from_secret(b"Very very secret secret");
-        let material_store = store::MaterialStore::init(".\\store");
+        let token_source = AuthTokenSource(TokenSource::<UserKey>::from_secret(b"Very very secret secret"));
+        let store_token_source = DownloadTokenSource(TokenSource::<MediaKey>::from_secret(b"Very very secret secret"));
+        
+        let material_store = store::MaterialStore::init("\\store");
 
         Ok(Self {
             authorizator: authorizator.await.map_err(InitError::Client)?,
             authenticator: authenticator.await.map_err(InitError::Client)?,
             material_store: material_store.await.map_err(InitError::MaterialStore)?,
             token_source,
+            store_token_source
         })
     }
 }
@@ -67,6 +75,7 @@ fn build_app(init: Init) -> Rocket<Build> {
         .manage(init.authenticator)
         .manage(init.material_store)
         .manage(init.token_source)
+        .manage(init.store_token_source)
         .attach(media::stage())
         .attach(users::stage())
         .attach(licenses::stage())

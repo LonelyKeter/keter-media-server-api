@@ -1,2 +1,5 @@
 [default]
 temp_dir = "temp"
+
+[default.limits]
+file = "10MiB"

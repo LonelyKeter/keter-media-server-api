@@ -8,6 +8,10 @@ pub use rocket::response::status;
 mod json;
 pub use json::*;
 
+
+mod file;
+pub use file::*;
+
 //mod plain;
 //pub use plain::*;
 

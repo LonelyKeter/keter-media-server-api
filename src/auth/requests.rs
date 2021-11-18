@@ -32,9 +32,9 @@ impl keter_media_auth::LoginDataAsync for LoginData {
 #[post("/login", format = "json", data = "<login_data>")]
 pub async fn login(
     login_data: Json<userinfo::LoginData>,
-    token_source: &State<authentication::TokenSoure>,
+    token_source: &State<authentication::AuthTokenSource>,
     authenticator: &State<state::Authenticator>,
-) -> JsonResponce<String, String> {
+) -> JsonResponce<AuthToken, String> {
     match token_source
         .create_token_async(LoginData(login_data.0), authenticator)
         .await

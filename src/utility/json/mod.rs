@@ -61,4 +61,18 @@ impl<T: Serialize> JsonResponce<T, ()> {
             Err(cl_err) => JsonResponce::err(cl_err.into()),
         }
     }
+
+    pub fn db_insert(db_query_result: Result<T, ClientError>) -> JsonResponce<T, ()> {
+        match db_query_result {
+            Ok(val) => JsonResponce::success(JsonSuccess::Created(val)),
+            Err(cl_err) => JsonResponce::err(cl_err.into()),
+        }
+    }
+
+    pub fn db_put(db_query_result: Result<T, ClientError>) -> JsonResponce<T, ()> {
+        match db_query_result {
+            Ok(val) => JsonResponce::success(JsonSuccess::Ok(val)),
+            Err(cl_err) => JsonResponce::err(cl_err.into()),
+        }
+    }
 }

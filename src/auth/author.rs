@@ -1,16 +1,16 @@
 use super::*;
 
 pub struct Author {
-  privelegies: Privelegies<roles::Author>
+  priveleges: Priveleges<roles::Author>
 }
 
 impl Author {
-  fn new(privelegies: Privelegies<roles::Author>) -> Self {
-      Self { privelegies }
+  fn new(priveleges: Priveleges<roles::Author>) -> Self {
+      Self { priveleges }
   }
 
-  pub fn privelegies(&self) -> &Privelegies<roles::Author> {
-    &self.privelegies
+  pub fn priveleges(&self) -> &Priveleges<roles::Author> {
+    &self.priveleges
   }
 }
 
@@ -26,8 +26,8 @@ impl<'r> FromRequest<'r> for Author {
           None => return Outcome::Forward(())
       };
       
-      match auhtorizator.author_privelegies(authentication.user_key()).await {
-          Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
+      match auhtorizator.author_priveleges(authentication.user_key()).await {
+          Ok(priveleges) => Outcome::Success(Self::new(priveleges)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }
   }  

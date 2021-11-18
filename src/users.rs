@@ -7,7 +7,7 @@ pub fn stage() -> AdHoc {
         rocket.mount("/api/users", routes![
             get,
             get_self,
-            get_self_privelegies,
+            get_self_priveleges,
             get_usages,
             get_self_usages])
     })
@@ -17,31 +17,31 @@ use keter_media_model::userinfo::*;
 
 #[get("/<id>", format = "json")]
 pub async fn get(id: UserKey, user: Unauthenticated) -> JsonResponce<UserInfo, ()> {
-    JsonResponce::db_get_opt(user.privelegies().get_user_info(id).await)
+    JsonResponce::db_get_opt(user.priveleges().get_user_info(id).await)
 }
 
 #[get("/self")]
 pub async fn get_self(
     _auth: &Authentication,
-    user: Registered,
+    user: Unauthenticated,
 ) -> JsonResponce<UserInfo, ()> {
-    JsonResponce::db_get_opt(user.privelegies().get_info().await)
+    JsonResponce::db_get_opt(user.priveleges().get_user_info(_auth.user_key()).await)
 }
 
-#[get("/self/privelegies")]
-pub async fn get_self_privelegies(
+#[get("/self/priveleges")]
+pub async fn get_self_priveleges(
     _auth: &Authentication,
-    user: Registered,
+    user: Unauthenticated,
 ) -> JsonResponce<UserPriveleges, ()> {
-    JsonResponce::db_get_opt(user.privelegies().get_privelegies().await)
+    JsonResponce::db_get_opt(user.priveleges().get_user_priveleges(_auth.user_key()).await)
 }
 
 #[get("/<id>/usages")]
 pub async fn get_usages(id: UserKey, user: Unauthenticated) -> JsonResponce<Vec<Usage>, ()> {
-    JsonResponce::db_get_many(user.privelegies().get_usages(id).await)
+    JsonResponce::db_get_many(user.priveleges().get_user_usages(id).await)
 }
 
 #[get("/self/usages", rank = 2)]
 pub async fn get_self_usages(_auth: &Authentication, user: Unauthenticated) -> JsonResponce<Vec<Usage>, ()> {
-    JsonResponce::db_get_many(user.privelegies().get_usages(_auth.user_key()).await)
+    JsonResponce::db_get_many(user.priveleges().get_user_usages(_auth.user_key()).await)
 }

@@ -1,12 +1,12 @@
 use super::*;
 
 pub struct Moderator {
-  privelegies: Privelegies<roles::Moderator>
+  priveleges: Priveleges<roles::Moderator>
 }
 
 impl Moderator {
-  fn new(privelegies: Privelegies<roles::Moderator>) -> Self {
-      Self { privelegies }
+  fn new(priveleges: Priveleges<roles::Moderator>) -> Self {
+      Self { priveleges }
   }
 }
 
@@ -22,8 +22,8 @@ impl<'r> FromRequest<'r> for Moderator {
           None => return Outcome::Forward(())
       };
       
-      match auhtorizator.moderator_privelegies(authentication.user_key()).await {
-          Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
+      match auhtorizator.moderator_priveleges(authentication.user_key()).await {
+          Ok(priveleges) => Outcome::Success(Self::new(priveleges)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }
   }  

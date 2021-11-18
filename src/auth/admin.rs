@@ -1,12 +1,12 @@
 use super::*;
 
 pub struct Admin {
-  privelegies: Privelegies<roles::Admin>
+  priveleges: Priveleges<roles::Admin>
 }
 
 impl Admin {
-  fn new(privelegies: Privelegies<roles::Admin>) -> Self {
-      Self { privelegies }
+  fn new(priveleges: Priveleges<roles::Admin>) -> Self {
+      Self { priveleges }
   }
 }
 
@@ -22,8 +22,8 @@ impl<'r> FromRequest<'r> for Admin {
           None => return Outcome::Forward(())
       };
       
-      match auhtorizator.admin_privelegies(authentication.user_key()).await {
-          Ok(privelegies) => Outcome::Success(Self::new(privelegies)),
+      match auhtorizator.admin_priveleges(authentication.user_key()).await {
+          Ok(priveleges) => Outcome::Success(Self::new(priveleges)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }
   }  
