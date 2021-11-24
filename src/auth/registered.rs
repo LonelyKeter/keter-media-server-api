@@ -1,21 +1,33 @@
+use std::ops::Deref;
+
+use keter_media_db::client::Client;
+
 use super::*;
 
-pub struct Registered {
-  priveleges: Priveleges<roles::Registered>
+pub struct Registered<'a> {
+  client: &'a Client<roles::Registered>
 }
 
-impl Registered {
-  fn new(priveleges: Priveleges<roles::Registered>) -> Self {
-      Self { priveleges }
+impl<'a> Registered<'a> {
+  fn new<'b: 'a>(client: &'b Client<roles::Registered>) -> Self {
+      Self { client }
   }
 
-  pub fn priveleges(&self) -> &Priveleges<roles::Registered> {
-    &self.priveleges
+  pub fn priveleges(&self) -> &Client<roles::Registered> {
+    &self.client
   }
+}
+
+impl Deref for Registered<'_> {
+    type Target = Client<roles::Registered>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.client
+    }
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for Registered {
+impl<'r> FromRequest<'r> for Registered<'r> {
   type Error = AccessError;
 
   async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
@@ -26,7 +38,7 @@ impl<'r> FromRequest<'r> for Registered {
           None => return Outcome::Failure((Status::InternalServerError, AccessError::NoPermitions))
       };
       
-      match auhtorizator.registered_priveleges(authentication.user_key()).await {
+      match auhtorizator.registered_priveleges().await {
           Ok(priveleges) => Outcome::Success(Self::new(priveleges)),
           Err(_) => Outcome::Failure((Status::Forbidden, AccessError::NoPermitions))
       }

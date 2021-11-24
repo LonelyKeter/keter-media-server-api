@@ -34,11 +34,11 @@ impl<E: Serialize> From<ClientError> for JsonError<E> {
     fn from(err: ClientError) -> Self {
         match err {
             ClientError::Parse(e) => Self::Db {
-                message: format!("{:?}", e),
+                message: format!("{:#?}", e),
             },
             ClientError::Postgres(e) => Self::Db {
                 message: if let Some(db_err) = e.as_db_error() {
-                    format!("{:?}", db_err)
+                    format!("{:#?}", db_err)
                 } else {
                     String::from("")
                 },

@@ -1,21 +1,29 @@
+use std::ops::Deref;
+
+use keter_media_db::client::Client;
+
 use super::*;
 
-pub struct Unauthenticated {
-  priveleges: Priveleges<roles::Unauthenticated>
+pub struct Unauthenticated<'a> {
+  client: &'a Client<roles::Unauthenticated>
 }
 
-impl Unauthenticated {
-  fn new(priveleges: Priveleges<roles::Unauthenticated>) -> Self {
-      Self { priveleges }
+impl<'a> Unauthenticated<'a> {
+  fn new<'b: 'a>(client: &'b Client<roles::Unauthenticated>) -> Self {
+      Self { client }
   }
+}
 
-  pub fn priveleges(&self) -> &Priveleges<roles::Unauthenticated> {
-    &self.priveleges
-  }
+impl Deref for Unauthenticated<'_> {
+    type Target = Client<roles::Unauthenticated>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.client
+    }
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for Unauthenticated {
+impl<'r> FromRequest<'r> for Unauthenticated<'r> {
   type Error = AccessError;
 
   async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {

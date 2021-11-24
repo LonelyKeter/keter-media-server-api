@@ -1,4 +1,3 @@
-use keter_media_db::auth::Priveleges;
 use keter_media_db::db::model::MediaSearchKey;
 use rocket::fairing::AdHoc;
 use rocket::form::{self, Form, FromFormField, ValueField};
@@ -6,8 +5,8 @@ use rocket::fs::TempFile;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use keter_media_model::{media::*, usage::*, userinfo::*};
 use crate::{auth::*, store::MaterialStore, utility::*};
+use keter_media_model::{media::*, usage::*, userinfo::*};
 
 pub fn stage() -> AdHoc {
     AdHoc::on_ignite("MEDIA", |rocket| async {
@@ -76,8 +75,8 @@ impl From<MediaKindParam> for MediaKind {
 }
 
 #[get("/")]
-pub async fn get(user: Unauthenticated) -> JsonResponce<Vec<MediaInfo>, ()> {
-    JsonResponce::db_get_many(user.priveleges().get_media_many().await)
+pub async fn get(user: Unauthenticated<'_>) -> JsonResponce<Vec<MediaInfo>, ()> {
+    JsonResponce::db_get_many(user.get_media_many().await)
 }
 
 #[get("/?<title>&<kind>&<author>&<rating>", format = "json")]
@@ -91,50 +90,51 @@ pub async fn get_base(
 }
 
 #[get("/<id>", format = "json")]
-pub async fn get_media_id(id: MediaKey, user: Unauthenticated) -> JsonResponce<MediaInfo, ()> {
-    JsonResponce::db_get_opt(user.priveleges().get_media_id(id).await)
+pub async fn get_media_id(id: MediaKey, user: Unauthenticated<'_>) -> JsonResponce<MediaInfo, ()> {
+    JsonResponce::db_get_opt(user.get_media_id(id).await)
 }
 
 #[get("/?<author_id>", format = "json")]
 pub async fn get_media_author_id(
     author_id: UserKey,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<Vec<MediaInfo>, ()> {
-    JsonResponce::db_get_many(user.priveleges().get_media_author_id(author_id).await)
+    JsonResponce::db_get_many(user.get_media_author_id(author_id).await)
 }
 
 #[get("/<id>/usages", format = "json")]
-pub async fn get_usages(id: MediaKey, user: Unauthenticated) -> JsonResponce<Vec<UserUsage>, ()> {
-    JsonResponce::db_get_many(user.priveleges().get_media_usages(id).await)
+pub async fn get_usages(
+    id: MediaKey,
+    user: Unauthenticated<'_>,
+) -> JsonResponce<Vec<UserUsage>, ()> {
+    JsonResponce::db_get_many(user.get_media_usages(id).await)
 }
 
 #[get("/reviews/<review_id>", format = "json", rank = 3)]
-pub async fn get_review(review_id: ReviewKey, user: Unauthenticated) -> JsonResponce<UserReview, ()> {
-    JsonResponce::db_get_opt(user.priveleges().get_review(review_id).await)
+pub async fn get_review(
+    review_id: ReviewKey,
+    user: Unauthenticated<'_>,
+) -> JsonResponce<UserReview, ()> {
+    JsonResponce::db_get_opt(user.get_review(review_id).await)
 }
 
 #[get("/<media_id>/reviews", format = "json")]
 pub async fn get_reviews(
     media_id: MediaKey,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<Vec<UserReview>, ()> {
-    JsonResponce::db_get_many(
-        user.priveleges()
-            .get_reviews(MediaSearchKey::Id(media_id))
-            .await,
-    )
+    JsonResponce::db_get_many(user.get_reviews(&MediaSearchKey::Id(media_id)).await)
 }
 
 #[post("/<media_id>/reviews", format = "json", data = "<review>")]
 pub async fn post_review(
     media_id: MediaKey,
     review: Json<Review>,
-    _auth: &Authentication,
-    user: Registered,
+    auth: &Authentication,
+    user: Registered<'_>,
 ) -> JsonResponce<(), ()> {
     JsonResponce::db_get(
-        user.priveleges()
-            .post_review(&MediaSearchKey::Id(media_id), &review.0)
+        user.post_review(auth.user_key(), &MediaSearchKey::Id(media_id), &review.0)
             .await,
     )
 }
@@ -148,9 +148,9 @@ pub async fn post_review_reject(media_id: MediaKey, review: Json<Review>) -> Jso
 pub async fn post_media(
     reg_media: Json<RegisterMedia>,
     auth: &Authentication,
-    author: Author,
+    author: Author<'_>,
 ) -> JsonResponce<MediaKey, ()> {
-    JsonResponce::db_insert(author.priveleges().create_media(&reg_media).await)
+    JsonResponce::db_insert(author.create_media(auth.user_key(), &reg_media).await)
 }
 
 #[post("/", format = "json", rank = 4)]
@@ -162,32 +162,27 @@ pub async fn post_media_reject() -> JsonError<()> {
 pub async fn get_materials_auth(
     media_id: MediaKey,
     auth: &Authentication,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<Vec<MaterialInfo>, ()> {
-    JsonResponce::db_get_many(
-        user.priveleges()
-            .get_materials(media_id, Some(auth.user_key()))
-            .await,
-    )
+    JsonResponce::db_get_many(user.get_materials(media_id, Some(auth.user_key())).await)
 }
 
 #[get("/<media_id>/materials", format = "json", rank = 2)]
 pub async fn get_materials(
     media_id: MediaKey,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<Vec<MaterialInfo>, ()> {
-    JsonResponce::db_get_many(user.priveleges().get_materials(media_id, None).await)
+    JsonResponce::db_get_many(user.get_materials(media_id, None).await)
 }
 
 #[get("/materials/<material_id>", format = "json", rank = 3)]
 pub async fn get_material_id_auth(
     material_id: MaterialKey,
     auth: &Authentication,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<MaterialInfo, ()> {
     JsonResponce::db_get_opt(
-        user.priveleges()
-            .get_material_id(material_id, Some(auth.user_key()))
+        user.get_material_id(material_id, Some(auth.user_key()))
             .await,
     )
 }
@@ -195,39 +190,39 @@ pub async fn get_material_id_auth(
 #[get("/materials/<material_id>", format = "json", rank = 4)]
 pub async fn get_material_id(
     material_id: MaterialKey,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<MaterialInfo, ()> {
-    JsonResponce::db_get_opt(user.priveleges().get_material_id(material_id, None).await)
+    JsonResponce::db_get_opt(user.get_material_id(material_id, None).await)
 }
 
 #[get("/materials/<material_id>/usages?<user_id>", format = "json", rank = 1)]
 pub async fn get_material_id_user_usage(
     material_id: MaterialKey,
     user_id: UserKey,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<Usage, ()> {
-    JsonResponce::db_get_opt(
-        user.priveleges()
-            .get_material_usage_user_id(material_id, user_id)
-            .await,
-    )
+    JsonResponce::db_get_opt(user.get_material_usage_user_id(material_id, user_id).await)
 }
 
 #[get("/material/<id>/usages", format = "json")]
 pub async fn get_usages_material(
     id: MaterialKey,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> JsonResponce<Vec<UserUsage>, ()> {
-    JsonResponce::db_get_many(user.priveleges().get_media_usages(id).await)
+    JsonResponce::db_get_many(user.get_media_usages(id).await)
 }
 
 #[post("/materials/<material_id>/usages", format = "json")]
 pub async fn post_material_id_usage(
     material_id: MaterialKey,
     auth: &Authentication,
-    user: Registered,
+    user: Registered<'_>,
 ) -> JsonResponce<(), ()> {
-    JsonResponce::db_get(user.priveleges().create_material_usage(material_id).await)
+    JsonResponce::db_get(
+        user.priveleges()
+            .create_material_usage(auth.user_key(), material_id)
+            .await,
+    )
 }
 
 #[post("/materials/<material_id>/usages", format = "json")]
@@ -245,11 +240,11 @@ pub struct DonwloadMaterial {
 #[rocket::async_trait]
 impl keter_media_auth::LoginDataAsync for DonwloadMaterial {
     type Claim = MaterialKey;
-    type Context = Priveleges<keter_media_db::auth::roles::Unauthenticated>;
+    type Context = keter_media_db::client::Client<keter_media_db::auth::roles::Unauthenticated>;
     type Err = JsonError<()>;
 
-    async fn to_claim(self, priveleges: &Self::Context) -> Result<Self::Claim, Self::Err> {
-        match priveleges
+    async fn to_claim(self, client: &Self::Context) -> Result<Self::Claim, Self::Err> {
+        match client
             .get_material_usage_user_id(self.material_id, self.user_id)
             .await
         {
@@ -265,7 +260,7 @@ impl keter_media_auth::LoginDataAsync for DonwloadMaterial {
 pub async fn get_material_download_token(
     material_id: MaterialKey,
     auth: &Authentication,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
     token_source: &State<DownloadTokenSource>,
 ) -> JsonResponce<String, ()> {
     match token_source
@@ -274,7 +269,7 @@ pub async fn get_material_download_token(
                 material_id,
                 user_id: auth.user_key(),
             },
-            user.priveleges(),
+            &user,
         )
         .await
     {
@@ -293,7 +288,7 @@ pub async fn download_material(
     token: String,
     token_source: &State<DownloadTokenSource>,
     store: &State<MaterialStore>,
-    user: Unauthenticated,
+    user: Unauthenticated<'_>,
 ) -> Result<status::Accepted<FileResponce>, JsonError<()>> {
     let material_id = token_source
         .verify_token(&token)
@@ -305,7 +300,6 @@ pub async fn download_material(
         .map_err(|_| JsonError::InternalServerError(()))?;
 
     let file_name = user
-        .priveleges()
         .get_material_download_name(material_id)
         .await
         .map_err(|err| JsonError::from(err))?;
@@ -324,11 +318,10 @@ pub async fn put_material_rating(
     material_id: MaterialKey,
     user_rating: Json<UserRating>,
     auth: &Authentication,
-    user: Registered,
+    user: Registered<'_>,
 ) -> JsonResponce<(), ()> {
     JsonResponce::db_put(
-        user.priveleges()
-            .insert_material_rating(material_id, &user_rating)
+        user.insert_material_rating(material_id, auth.user_key(), &user_rating)
             .await,
     )
 }
@@ -375,14 +368,14 @@ pub async fn post_material(
     license: LicenseKey,
     add_material: Form<AddMaterial<'_>>,
     store: &State<MaterialStore>,
-    _auth: &Authentication,
-    author: Author,
+    auth: &Authentication,
+    author: Author<'_>,
 ) -> JsonResponce<MaterialKey, String> {
     let material = add_material.into_inner();
 
     let material_id = match author
-        .priveleges()
         .insert_material(
+            auth.user_key(),
             media,
             LicenseSearchKey::Id(license),
             &format,
@@ -415,7 +408,7 @@ pub async fn post_material_reject(
 }
 
 #[delete("/materials/<id>")]
-pub async fn delete_material_admin(id: MaterialKey, auth: &Authentication, admin: Admin) {
+pub async fn delete_material_admin(id: MaterialKey, auth: &Authentication, admin: Admin<'_>) {
     unimplemented!();
 }
 
@@ -423,9 +416,9 @@ pub async fn delete_material_admin(id: MaterialKey, auth: &Authentication, admin
 pub async fn delete_material_author(
     id: MaterialKey,
     auth: &Authentication,
-    user: Author,
+    user: Author<'_>,
 ) -> JsonResponce<(), ()> {
-    match user.priveleges().delete_material(id).await {
+    match user.delete_material(auth.user_key(), id).await {
         Ok(_) => success(JsonSuccess::NoContent(())),
         Err(error) => err(error.into()),
     }

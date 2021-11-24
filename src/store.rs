@@ -17,7 +17,7 @@ impl MaterialStore {
             absolute.push(root.as_ref());
 
             absolute
-        }; 
+        };
 
         if !root.exists() {
             tokio::fs::create_dir_all(&root)

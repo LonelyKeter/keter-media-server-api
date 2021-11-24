@@ -636,6 +636,7 @@ dependencies = [
  "lazy_static",
  "postgres-types",
  "postgres_query",
+ "pretty_unwrap",
  "sha2",
  "tokio",
  "tokio-postgres",
@@ -1042,6 +1043,10 @@ name = "ppv-lite86"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
+
+[[package]]
+name = "pretty_unwrap"
+version = "0.1.0"
 
 [[package]]
 name = "proc-macro-hack"

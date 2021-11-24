@@ -1,17 +1,29 @@
+use std::ops::Deref;
+
+use keter_media_db::client::Client;
+
 use super::*;
 
-pub struct Moderator {
-  priveleges: Priveleges<roles::Moderator>
+pub struct Moderator<'a> {
+  client: &'a Client<roles::Moderator>
 }
 
-impl Moderator {
-  fn new(priveleges: Priveleges<roles::Moderator>) -> Self {
-      Self { priveleges }
+impl<'a> Moderator<'a> {
+  fn new<'b: 'a>(client: &'b Client<roles::Moderator>) -> Self {
+      Self { client }
   }
 }
 
+impl Deref for Moderator<'_> {
+    type Target = Client<roles::Moderator>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.client
+    }    
+}
+
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for Moderator {
+impl<'r> FromRequest<'r> for Moderator<'r> {
   type Error = AccessError;
 
   async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {

@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-mod media;
 mod licenses;
+mod media;
 mod users;
 
 mod auth;
@@ -25,23 +25,27 @@ pub mod state {
 struct Init {
     authorizator: Authorizator,
     authenticator: Authenticator,
-    token_source: auth::AuthTokenSource, 
+    token_source: auth::AuthTokenSource,
     store_token_source: auth::DownloadTokenSource,
-    material_store: store::MaterialStore
+    material_store: store::MaterialStore,
 }
 
 impl Init {
     async fn init() -> Result<Self, InitError> {
-        use crate::auth::{TokenSource, AuthTokenSource, DownloadTokenSource};
+        use crate::auth::{AuthTokenSource, DownloadTokenSource, TokenSource};
         use keter_media_model::media::MediaKey;
         use keter_media_model::userinfo::UserKey;
 
         let authorizator = create_authorizator();
         let authenticator = create_authenticator();
 
-        let token_source = AuthTokenSource(TokenSource::<UserKey>::from_secret(b"Very very secret secret"));
-        let store_token_source = DownloadTokenSource(TokenSource::<MediaKey>::from_secret(b"Very very secret secret"));
-        
+        let token_source = AuthTokenSource(TokenSource::<UserKey>::from_secret(
+            b"Very very secret secret",
+        ));
+        let store_token_source = DownloadTokenSource(TokenSource::<MediaKey>::from_secret(
+            b"Very very secret secret",
+        ));
+
         let material_store = store::MaterialStore::init("\\store");
 
         Ok(Self {
@@ -49,16 +53,15 @@ impl Init {
             authenticator: authenticator.await.map_err(InitError::Client)?,
             material_store: material_store.await.map_err(InitError::MaterialStore)?,
             token_source,
-            store_token_source
+            store_token_source,
         })
     }
 }
 
-
 #[derive(Debug)]
 enum InitError {
     Client(ClientError),
-    MaterialStore(store::Error)
+    MaterialStore(store::Error),
 }
 
 #[rocket::main]
