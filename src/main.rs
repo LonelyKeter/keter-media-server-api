@@ -14,6 +14,8 @@ mod store;
 #[macro_use]
 pub extern crate rocket;
 
+use pretty_unwrap::*;
+
 mod req_prelude {
     pub use rocket::{self, http::RawStr, serde::json::Json};
 }
@@ -66,9 +68,9 @@ enum InitError {
 
 #[rocket::main]
 async fn main() {
-    let init = Init::init().await.unwrap();
+    let init = Init::init().await.unwrap_pretty();
 
-    build_app(init).launch().await.unwrap();
+    build_app(init).launch().await.unwrap_pretty();
 }
 
 use rocket::{Build, Rocket};
@@ -136,7 +138,7 @@ mod test {
     async fn login() {
         use keter_media_model::userinfo::LoginData;
 
-        let rocket = build_app(Init::init().await.unwrap());
+        let rocket = build_app(Init::init().await.unwrap_pretty());
         let client = client_untracked(rocket).await;
 
         let login_data = LoginData {

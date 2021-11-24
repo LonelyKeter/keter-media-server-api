@@ -6,7 +6,7 @@ use rocket::serde::json::Json;
 use rocket::State;
 
 use crate::{auth::*, store::MaterialStore, utility::*};
-use keter_media_model::{media::*, usage::*, userinfo::*};
+use keter_media_model::{media::*, usage::*, userinfo::*, *};
 
 pub fn stage() -> AdHoc {
     AdHoc::on_ignite("MEDIA", |rocket| async {
@@ -14,6 +14,7 @@ pub fn stage() -> AdHoc {
             "/api/media",
             routes![
                 get,
+                get_with_options,
                 get_media_id,
                 get_media_author_id,
                 post_media,
@@ -57,10 +58,21 @@ impl<'r> FromFormField<'r> for AuthorParam {
     }
 }
 
+#[get("/")]
+pub async fn get(user: Unauthenticated<'_>) -> JsonResponce<Vec<MediaInfo>, ()> {
+    JsonResponce::db_get_many(user.get_media_many().await)
+}
+
 #[derive(FromFormField)]
 pub enum MediaKindParam {
+    #[field(value = "a")]
+    #[field(value = "audio")]
     Audio,
+    #[field(value = "v")]
+    #[field(value = "video")]
     Video,
+    #[field(value = "i")]
+    #[field(value = "image")]
     Image,
 }
 
@@ -74,19 +86,90 @@ impl From<MediaKindParam> for MediaKind {
     }
 }
 
-#[get("/")]
-pub async fn get(user: Unauthenticated<'_>) -> JsonResponce<Vec<MediaInfo>, ()> {
-    JsonResponce::db_get_many(user.get_media_many().await)
+#[derive(FromFormField)]
+pub enum FilterOrderingParam {
+    #[field(value = "asc")]
+    #[field(value = "ascending")]
+    Ascending,
+    #[field(value = "desc")]
+    #[field(value = "descending")]
+    Descending,
 }
 
-#[get("/?<title>&<kind>&<author>&<rating>", format = "json")]
-pub async fn get_base(
+impl From<FilterOrderingParam> for FilterOrdering {
+    fn from(other: FilterOrderingParam) -> FilterOrdering {
+        match other {
+            FilterOrderingParam::Ascending => FilterOrdering::Ascending,
+            FilterOrderingParam::Descending => FilterOrdering::Descending,
+        }
+    }
+}
+
+#[get("/?<title>&<kinds>&<min_rating>&<max_rating>&<min_use_count>&<max_use_count>&<rating_ordering>&<use_count_ordering>", format = "json", rank=2)]
+pub async fn get_with_options(
     title: Option<String>,
-    kind: Option<MediaKindParam>,
-    author: Option<AuthorParam>,
-    rating: Option<Rating>,
-) -> Json<Vec<MediaInfo>> {
-    unimplemented!()
+    kinds: Option<Vec<MediaKindParam>>,
+    min_rating: Option<i64>,
+    max_rating: Option<i64>,
+    min_use_count: Option<i64>,
+    max_use_count: Option<i64>,
+    rating_ordering: Option<FilterOrderingParam>,
+    use_count_ordering: Option<FilterOrderingParam>,
+    user: Unauthenticated<'_>,
+) -> JsonResponce<Vec<MediaInfo>, ()> {
+    let kinds = kinds.map(|v| v.into_iter().map(Into::into).collect());
+
+    let rating_ordering = rating_ordering.map(Into::<FilterOrdering>::into);
+    let use_count_ordering = use_count_ordering.map(Into::<FilterOrdering>::into);
+
+    let options = parse_media_filter_options(
+        title,
+        kinds,
+        min_rating,
+        max_rating,
+        min_use_count,
+        max_use_count,
+        rating_ordering,
+        use_count_ordering,
+    );
+
+    JsonResponce::db_get_many(user.get_media_many_with_options(&options).await)
+}
+
+fn parse_media_filter_options(
+    title: Option<String>,
+    kinds: Option<Vec<MediaKind>>,
+    min_rating: Option<i64>,
+    max_rating: Option<i64>,
+    min_use_count: Option<i64>,
+    max_use_count: Option<i64>,
+    rating_ordering: Option<FilterOrdering>,
+    use_count_ordering: Option<FilterOrdering>,
+) -> MediaFilterOptions {
+    let popularity = parse_range_filter(min_rating, max_rating, rating_ordering);
+    let times_used = parse_range_filter(min_use_count, max_use_count, use_count_ordering);
+
+    MediaFilterOptions {
+        title,
+        kinds,
+        popularity,
+        times_used,
+    }
+}
+
+fn parse_range_filter(
+    min: Option<i64>,
+    max: Option<i64>,
+    ordering: Option<FilterOrdering>,
+) -> Option<RangeFilter> {
+    if min.is_some() || max.is_some() || ordering.is_some() {
+        Some(RangeFilter {
+            ordering,
+            limits: Limits { min, max },
+        })
+    } else {
+        None
+    }
 }
 
 #[get("/<id>", format = "json")]
@@ -94,7 +177,7 @@ pub async fn get_media_id(id: MediaKey, user: Unauthenticated<'_>) -> JsonRespon
     JsonResponce::db_get_opt(user.get_media_id(id).await)
 }
 
-#[get("/?<author_id>", format = "json")]
+#[get("/?<author_id>", format = "json", rank = 3)]
 pub async fn get_media_author_id(
     author_id: UserKey,
     user: Unauthenticated<'_>,

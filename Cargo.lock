@@ -662,6 +662,7 @@ dependencies = [
  "keter-media-auth",
  "keter-media-db",
  "keter-media-model",
+ "pretty_unwrap",
  "rocket",
  "serde",
  "serde_json",
