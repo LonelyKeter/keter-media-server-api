@@ -37,14 +37,17 @@ impl<E: Serialize> From<ClientError> for JsonError<E> {
                 message: format!("{:#?}", e),
             },
             ClientError::Postgres(e) => Self::Db {
+                message: format!("{:#?}", e)
+                /*
                 message: if let Some(db_err) = e.as_db_error() {
                     format!("{:#?}", db_err)
                 } else {
                     String::from("")
                 },
+                 */
             },
-            _ => Self::Db {
-                message: "".to_string(),
+            e => Self::Db {
+                message: format!("{:#?}", e),
             },
         }
     }

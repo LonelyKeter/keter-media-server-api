@@ -13,7 +13,6 @@ pub fn stage() -> AdHoc {
         rocket.mount(
             "/api/media",
             routes![
-                get,
                 get_with_options,
                 get_media_id,
                 get_media_author_id,
@@ -56,11 +55,6 @@ impl<'r> FromFormField<'r> for AuthorParam {
             Ok(AuthorParam::Alias(field.value.to_owned()))
         }
     }
-}
-
-#[get("/")]
-pub async fn get(user: Unauthenticated<'_>) -> JsonResponce<Vec<MediaInfo>, ()> {
-    JsonResponce::db_get_many(user.get_media_many().await)
 }
 
 #[derive(FromFormField)]
@@ -132,6 +126,8 @@ pub async fn get_with_options(
         rating_ordering,
         use_count_ordering,
     );
+
+    println!("{:#?}", &options);
 
     JsonResponce::db_get_many(user.get_media_many_with_options(&options).await)
 }
