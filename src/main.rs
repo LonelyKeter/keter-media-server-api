@@ -8,6 +8,7 @@ mod users;
 mod auth;
 
 mod utility;
+mod param_mappings;
 
 mod store;
 
@@ -34,12 +35,17 @@ struct Init {
 
 impl Init {
     async fn init() -> Result<Self, InitError> {
+        use rocket::futures::{TryFutureExt, try_join};
+
         use crate::auth::{AuthTokenSource, DownloadTokenSource, TokenSource};
         use keter_media_model::media::MediaKey;
         use keter_media_model::userinfo::UserKey;
 
-        let authorizator = create_authorizator();
-        let authenticator = create_authenticator();
+        let (authorizator, authenticator, material_store) = try_join!(
+            create_authorizator().map_err(InitError::Client),
+            create_authenticator().map_err(InitError::Client),
+            store::MaterialStore::init("store").map_err(InitError::MaterialStore)
+        )?;
 
         let token_source = AuthTokenSource(TokenSource::<UserKey>::from_secret(
             b"Very very secret secret",
@@ -48,12 +54,10 @@ impl Init {
             b"Very very secret secret",
         ));
 
-        let material_store = store::MaterialStore::init("\\store");
-
         Ok(Self {
-            authorizator: authorizator.await.map_err(InitError::Client)?,
-            authenticator: authenticator.await.map_err(InitError::Client)?,
-            material_store: material_store.await.map_err(InitError::MaterialStore)?,
+            authorizator,
+            authenticator,
+            material_store,
             token_source,
             store_token_source,
         })

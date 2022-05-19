@@ -26,6 +26,7 @@ impl MaterialStore {
         }
 
         if root.is_dir() {
+            println!("Created store at {:#?}", root.as_os_str());
             Ok(Self { root: root.into() })
         } else {
             Err(Error::InvalidRoot)
